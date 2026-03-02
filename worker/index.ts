@@ -1,6 +1,16 @@
 interface Env {
   ASSETS: { fetch(r: Request): Promise<Response> };
   GEMINI_API_KEY: string;
+  'BLACK-BOX-SHARE': KVNamespace;
+}
+
+type ShareData = { input: string; output: string; personaId: string };
+
+function generateId(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => chars[b % chars.length]).join('');
 }
 
 const GEMINI_MODEL = 'gemini-2.0-flash';
@@ -98,10 +108,60 @@ export default {
     if (request.method === 'POST' && url.pathname === '/api/generate') {
       return handleGenerate(request, env);
     }
+    if (request.method === 'POST' && url.pathname === '/api/share') {
+      return handleCreateShare(request, env);
+    }
+    if (request.method === 'GET' && url.pathname.startsWith('/api/share/')) {
+      return handleGetShare(request, env);
+    }
 
-    return env.ASSETS.fetch(request);
+    // SPA fallback: serve index.html for unknown paths
+    const response = await env.ASSETS.fetch(request);
+    if (response.status === 404) {
+      return env.ASSETS.fetch(new Request(new URL('/', request.url).toString()));
+    }
+    return response;
   },
 };
+
+async function handleCreateShare(request: Request, env: Env): Promise<Response> {
+  let body: { input?: unknown; output?: unknown; personaId?: unknown };
+  try {
+    body = await request.json();
+  } catch {
+    return Response.json({ error: 'Invalid JSON body' }, { status: 400 });
+  }
+
+  const { input, output, personaId } = body;
+  if (typeof input !== 'string' || typeof output !== 'string' || typeof personaId !== 'string') {
+    return Response.json({ error: 'Missing or invalid fields' }, { status: 400 });
+  }
+  if (input.length > 2000 || output.length > 10000) {
+    return Response.json({ error: 'Content too long' }, { status: 400 });
+  }
+  if (!PERSONAS[personaId]) {
+    return Response.json({ error: 'Unknown persona' }, { status: 400 });
+  }
+
+  const id = generateId();
+  const shareData: ShareData = { input, output, personaId };
+  await env['BLACK-BOX-SHARE'].put(id, JSON.stringify(shareData), { expirationTtl: 7776000 });
+  return Response.json({ id });
+}
+
+async function handleGetShare(request: Request, env: Env): Promise<Response> {
+  const url = new URL(request.url);
+  const id = url.pathname.slice('/api/share/'.length);
+  if (!/^[A-Za-z0-9]{8}$/.test(id)) {
+    return Response.json({ error: 'Invalid share ID' }, { status: 400 });
+  }
+
+  const value = await env['BLACK-BOX-SHARE'].get(id);
+  if (!value) {
+    return Response.json({ error: 'Share not found' }, { status: 404 });
+  }
+  return Response.json(JSON.parse(value) as ShareData);
+}
 
 async function handleGenerate(request: Request, env: Env): Promise<Response> {
   const ip = request.headers.get('CF-Connecting-IP') ?? 'unknown';

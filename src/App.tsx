@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
-import { Sparkles, Inbox, RefreshCw, Box, Globe } from 'lucide-react';
+import { Sparkles, Inbox, RefreshCw, Box, Globe, Share2, Check } from 'lucide-react';
 import Markdown from 'react-markdown';
 
 const TRANSLATIONS = {
@@ -12,6 +12,9 @@ const TRANSLATIONS = {
     complete: "Transformation Complete",
     errorBadge: "Something Went Wrong",
     tryAnother: "Try another",
+    share: "Share",
+    copied: "Copied!",
+    shareError: "Failed",
     warning: "Warning: Results may be highly unpredictable. This is just a game for fun, please don't take it seriously.",
     error: "The black box malfunctioned. Please try again.",
     silent: "The box remains silent..."
@@ -24,6 +27,9 @@ const TRANSLATIONS = {
     complete: "转化完成",
     errorBadge: "发生错误",
     tryAnother: "再试一次",
+    share: "分享",
+    copied: "已复制！",
+    shareError: "失败",
     warning: "警告：结果可能极具不可预测性。这只是一个供娱乐的文字游戏，请勿当真。",
     error: "黑箱发生故障，请重试。",
     silent: "黑箱保持沉默……"
@@ -59,6 +65,7 @@ export default function App() {
   const [isError, setIsError] = useState(false);
   const [currentPersona, setCurrentPersona] = useState(PERSONAS[0]);
   const [boxState, setBoxState] = useState<'idle' | 'processing' | 'revealed'>('idle');
+  const [shareStatus, setShareStatus] = useState<'idle' | 'loading' | 'copied' | 'error'>('idle');
 
   const tryAnotherRef = useRef<HTMLButtonElement>(null);
   const t = TRANSLATIONS[lang];
@@ -95,6 +102,24 @@ export default function App() {
       return () => window.removeEventListener('mousemove', handleMouseMove);
     }
   }, [mouseX, mouseY]);
+
+  // Load shared result from URL on mount
+  useEffect(() => {
+    const match = window.location.pathname.match(/^\/s\/([A-Za-z0-9]{8})$/);
+    if (!match) return;
+    const shareId = match[1];
+    setBoxState('processing');
+    fetch(`/api/share/${shareId}`)
+      .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+      .then((data: { input: string; output: string; personaId: string }) => {
+        const persona = PERSONAS.find(p => p.id === data.personaId) ?? PERSONAS[0];
+        setInput(data.input);
+        setOutput(data.output);
+        setCurrentPersona(persona);
+        setBoxState('revealed');
+      })
+      .catch(() => setBoxState('idle'));
+  }, []);
 
   // Move focus to "Try another" after reveal animation completes
   useEffect(() => {
@@ -156,9 +181,35 @@ export default function App() {
     }
   };
 
+  const handleShare = async () => {
+    if (shareStatus === 'loading') return;
+    setShareStatus('loading');
+    try {
+      const res = await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input, output, personaId: currentPersona.id }),
+      });
+      if (!res.ok) throw new Error();
+      const { id } = await res.json() as { id: string };
+      const shareUrl = `${window.location.origin}/s/${id}`;
+      await navigator.clipboard.writeText(shareUrl);
+      history.replaceState(null, '', `/s/${id}`);
+      setShareStatus('copied');
+      setTimeout(() => setShareStatus('idle'), 3000);
+    } catch {
+      setShareStatus('error');
+      setTimeout(() => setShareStatus('idle'), 2000);
+    }
+  };
+
   const handleReset = () => {
     setBoxState('idle');
     setOutput('');
+    setShareStatus('idle');
+    if (window.location.pathname !== '/') {
+      history.pushState(null, '', '/');
+    }
     // Input is preserved so users can retry or edit without retyping
   };
 
@@ -403,7 +454,7 @@ export default function App() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1, duration: 0.5 }}
-                    className="flex justify-center mt-8 md:mt-12"
+                    className="flex flex-col sm:flex-row justify-center gap-3 mt-8 md:mt-12"
                   >
                     <motion.button
                       ref={tryAnotherRef}
@@ -415,6 +466,23 @@ export default function App() {
                       <RefreshCw size={16} />
                       {t.tryAnother}
                     </motion.button>
+
+                    {!isError && (
+                      <motion.button
+                        whileHover={{ scale: 1.05, backgroundColor: "rgba(39, 39, 42, 1)" }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleShare}
+                        disabled={shareStatus === 'loading'}
+                        className="w-full md:w-auto flex items-center justify-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors px-6 py-3.5 md:py-3 rounded-full bg-zinc-800/50 border border-zinc-700/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {shareStatus === 'copied'
+                          ? <><Check size={16} /> {t.copied}</>
+                          : shareStatus === 'error'
+                          ? <><Share2 size={16} /> {t.shareError}</>
+                          : <><Share2 size={16} /> {t.share}</>
+                        }
+                      </motion.button>
+                    )}
                   </motion.div>
                 </motion.div>
               )}
