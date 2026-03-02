@@ -6,6 +6,9 @@ compatibility_date = "2025-01-01"
 binding = "BLACK-BOX-SHARE"
 id = "9a6ec12ee19243ebb92eff3ead035d52"
 
+[vars]
+GEMINI_MODEL = "gemini-2.5-flash"
+
 [assets]
 directory = "./dist"
 binding = "ASSETS"

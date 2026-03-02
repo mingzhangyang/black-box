@@ -16,7 +16,7 @@ function generateId(): string {
   return Array.from(bytes, b => chars[b % chars.length]).join('');
 }
 
-const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
+const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 
 const MAX_INPUT_LENGTH = 2000;
 const RATE_LIMIT_REQUESTS = 10;
