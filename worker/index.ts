@@ -3,6 +3,7 @@
 interface Env {
   ASSETS: { fetch(r: Request): Promise<Response> };
   GEMINI_API_KEY: string;
+  GEMINI_MODEL?: string;
   'BLACK-BOX-SHARE': KVNamespace;
 }
 
@@ -15,8 +16,7 @@ function generateId(): string {
   return Array.from(bytes, b => chars[b % chars.length]).join('');
 }
 
-const GEMINI_MODEL = 'gemini-3-flash';
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
+const DEFAULT_GEMINI_MODEL = 'gemini-3-flash-preview';
 
 const MAX_INPUT_LENGTH = 2000;
 const RATE_LIMIT_REQUESTS = 10;
@@ -201,7 +201,9 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
     instruction += "\n\nIMPORTANT: You MUST respond in the exact same language that the user used in their input.";
   }
 
-  const geminiRes = await fetch(`${GEMINI_URL}?key=${env.GEMINI_API_KEY}`, {
+  const geminiModel = env.GEMINI_MODEL ?? DEFAULT_GEMINI_MODEL;
+  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`;
+  const geminiRes = await fetch(`${geminiUrl}?key=${env.GEMINI_API_KEY}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
