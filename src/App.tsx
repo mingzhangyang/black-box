@@ -242,27 +242,35 @@ export default function App() {
 
       <div className="max-w-2xl w-full flex flex-col items-center z-10 mt-12 md:mt-0">
         
-        <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-8 md:mb-12"
-        >
-          <motion.div 
-            className="inline-flex items-center justify-center p-3 mb-4 md:mb-6 rounded-full bg-zinc-900 border border-zinc-800 shadow-lg"
-            animate={{ 
-              boxShadow: ["0px 0px 0px rgba(255,255,255,0)", "0px 0px 20px rgba(255,255,255,0.05)", "0px 0px 0px rgba(255,255,255,0)"]
-            }}
-            transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Box size={28} className="text-zinc-400 md:w-8 md:h-8" />
-          </motion.div>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 md:mb-4 text-zinc-100">
-            {t.title}
-          </h1>
-          <p className="text-zinc-400 text-base md:text-lg max-w-md mx-auto px-4">
-            {t.subtitle}
-          </p>
-        </motion.div>
+        <AnimatePresence>
+          {boxState === 'idle' && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+              className="overflow-hidden w-full"
+            >
+              <div className="text-center mb-8 md:mb-12 pt-2">
+                <motion.div 
+                  className="inline-flex items-center justify-center p-3 mb-4 md:mb-6 rounded-full bg-zinc-900 border border-zinc-800 shadow-lg"
+                  animate={{ 
+                    boxShadow: ["0px 0px 0px rgba(255,255,255,0)", "0px 0px 20px rgba(255,255,255,0.05)", "0px 0px 0px rgba(255,255,255,0)"]
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                >
+                  <Box size={28} className="text-zinc-400 md:w-8 md:h-8" />
+                </motion.div>
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 md:mb-4 text-zinc-100">
+                  {t.title}
+                </h1>
+                <p className="text-zinc-400 text-base md:text-lg max-w-md mx-auto px-4">
+                  {t.subtitle}
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div className="w-full relative" style={{ perspective: '1200px' }}>
           <AnimatePresence mode="wait">
