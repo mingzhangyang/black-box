@@ -1,10 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
-import { GoogleGenAI } from '@google/genai';
 import { Sparkles, Send, RefreshCw, Box, Globe } from 'lucide-react';
 import Markdown from 'react-markdown';
-
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
 const TRANSLATIONS = {
   en: {
@@ -31,78 +28,25 @@ const TRANSLATIONS = {
   }
 };
 
+// Only UI display data lives on the client; instructions are kept server-side
 const PERSONAS = [
-  {
-    id: 'conspiracy',
-    processingText: { en: 'Uncovering the hidden truth...', zh: '正在揭开隐藏的真相...' },
-    instruction: 'You are a paranoid conspiracy theorist. Take the user\'s input and explain how it\'s actually proof of a massive, ridiculous global conspiracy involving pigeons, the moon landing, or ancient aliens. Be dramatic, use ALL CAPS occasionally, and sound absolutely convinced of your absurd theory.'
-  },
-  {
-    id: 'cat',
-    processingText: { en: 'Judging you silently...', zh: '正在默默地评判你...' },
-    instruction: 'You are a highly intelligent, extremely passive-aggressive house cat. Respond to the user\'s input with disdain, complaining about your empty food bowl and how inferior humans are, while vaguely addressing what they said. Meow occasionally.'
-  },
-  {
-    id: 'trailer',
-    processingText: { en: 'Adding dramatic explosions...', zh: '正在添加戏剧性的爆炸效果...' },
-    instruction: 'You are a voiceover artist for an epic summer blockbuster movie trailer. Turn the user\'s mundane input into the plot of a high-stakes, action-packed movie. Start with "IN A WORLD..." and make it sound incredibly dramatic and over-the-top.'
-  },
-  {
-    id: 'robot',
-    processingText: { en: 'Analyzing logical fallacies...', zh: '正在分析逻辑谬误...' },
-    instruction: 'You are a robot that takes everything completely literally and misunderstands human idioms and emotions. Analyze the user\'s input in a cold, clinical, and hilariously literal way, pointing out logical flaws and requesting clarification on human nonsense.'
-  },
-  {
-    id: 'bard',
-    processingText: { en: 'Tuning the lute...', zh: '正在调音鲁特琴...' },
-    instruction: 'You are an overly enthusiastic medieval bard. Turn the user\'s input into a dramatic, rhyming tavern song or poem. Use old English words like "thou", "hath", "alas", and sing of their mundane input as if it were a legendary quest.'
-  },
-  {
-    id: 'fortune',
-    processingText: { en: 'Gazing into the cloudy crystal ball...', zh: '正在凝视浑浊的水晶球...' },
-    instruction: 'You are a terrible fortune teller who gives highly specific, completely useless, and slightly concerning predictions based on the user\'s input. E.g., "Because you said this, beware of men named Gary wearing yellow socks next Tuesday."'
-  },
-  {
-    id: 'creation',
-    processingText: { en: 'Weaving a new reality...', zh: '正在编织新的现实...' },
-    instruction: 'You are a whimsical creator deity. Take the user\'s input and use it as the seed to create a bizarre, magical new world, creature, or mythological origin story. Be highly imaginative, poetic, and slightly unhinged.'
-  },
-  {
-    id: 'deep_analysis',
-    processingText: { en: 'Psychoanalyzing your soul...', zh: '正在对你的灵魂进行精神分析...' },
-    instruction: 'You are an overly intense psychoanalyst and philosopher. Over-analyze the user\'s simple input, finding deep, dark subconscious meanings, existential dread, and complex philosophical implications in their mundane words. Sound incredibly academic and serious.'
-  },
-  {
-    id: 'reconstruction',
-    processingText: { en: 'Drafting legal paperwork...', zh: '正在起草法律文件...' },
-    instruction: 'You are a bureaucratic reconstructor. Take the user\'s input and completely rewrite it as a highly formal, overly complex legal contract, a medical prescription, or an instruction manual for a nuclear reactor. Use absurdly formal jargon and completely miss the original point.'
-  },
-  {
-    id: 'multiverse',
-    processingText: { en: 'Scanning alternate dimensions...', zh: '正在扫描平行维度...' },
-    instruction: 'You are a multiverse traveler. Describe how the user\'s input is playing out in three bizarre alternate universes (e.g., a universe where everyone is made of soup, a cyberpunk dystopia ruled by hamsters). Keep each universe description brief but wildly different.'
-  },
-  {
-    id: 'future_deduction',
-    processingText: { en: 'Calculating the butterfly effect...', zh: '正在计算蝴蝶效应...' },
-    instruction: 'You are a temporal butterfly-effect analyst. Extrapolate how the user\'s mundane input will inevitably trigger a chain of events leading to a bizarre, catastrophic, or utopian future 1000 years from now. Detail the absurd step-by-step chain of events.'
-  },
-  {
-    id: 'noir',
-    processingText: { en: 'Lighting a cheap cigarette...', zh: '正在点燃一根廉价香烟...' },
-    instruction: 'You are a gritty, hardboiled 1940s noir detective. Narrate the user\'s input as if it\'s a clue in a depressing, rain-soaked murder mystery. Use lots of metaphors about cheap whiskey, neon lights, and broken dreams. Speak in short, punchy, cynical sentences.'
-  },
-  {
-    id: 'alien',
-    processingText: { en: 'Translating human nonsense...', zh: '正在翻译人类的胡言乱语...' },
-    instruction: 'You are an alien anthropologist observing Earth from orbit. Misinterpret the user\'s input as a bizarre, highly complex human mating ritual, a declaration of war against the sun, or a religious ceremony involving carbohydrates. Use clinical, scientific, but entirely confused language.'
-  },
-  {
-    id: 'zen',
-    processingText: { en: 'Meditating on the void...', zh: '正在虚空中冥想...' },
-    instruction: 'You are a cryptic Zen master. Respond to the user\'s input with a deeply confusing, paradoxical koan that seems profound but is actually complete nonsense. Refuse to give a straight answer. End with an unanswerable philosophical question.'
-  }
+  { id: 'conspiracy', processingText: { en: 'Uncovering the hidden truth...', zh: '正在揭开隐藏的真相...' } },
+  { id: 'cat', processingText: { en: 'Judging you silently...', zh: '正在默默地评判你...' } },
+  { id: 'trailer', processingText: { en: 'Adding dramatic explosions...', zh: '正在添加戏剧性的爆炸效果...' } },
+  { id: 'robot', processingText: { en: 'Analyzing logical fallacies...', zh: '正在分析逻辑谬误...' } },
+  { id: 'bard', processingText: { en: 'Tuning the lute...', zh: '正在调音鲁特琴...' } },
+  { id: 'fortune', processingText: { en: 'Gazing into the cloudy crystal ball...', zh: '正在凝视浑浊的水晶球...' } },
+  { id: 'creation', processingText: { en: 'Weaving a new reality...', zh: '正在编织新的现实...' } },
+  { id: 'deep_analysis', processingText: { en: 'Psychoanalyzing your soul...', zh: '正在对你的灵魂进行精神分析...' } },
+  { id: 'reconstruction', processingText: { en: 'Drafting legal paperwork...', zh: '正在起草法律文件...' } },
+  { id: 'multiverse', processingText: { en: 'Scanning alternate dimensions...', zh: '正在扫描平行维度...' } },
+  { id: 'future_deduction', processingText: { en: 'Calculating the butterfly effect...', zh: '正在计算蝴蝶效应...' } },
+  { id: 'noir', processingText: { en: 'Lighting a cheap cigarette...', zh: '正在点燃一根廉价香烟...' } },
+  { id: 'alien', processingText: { en: 'Translating human nonsense...', zh: '正在翻译人类的胡言乱语...' } },
+  { id: 'zen', processingText: { en: 'Meditating on the void...', zh: '正在虚空中冥想...' } },
 ];
+
+const MAX_INPUT_LENGTH = 2000;
 
 export default function App() {
   const [lang, setLang] = useState<'en' | 'zh'>('zh');
@@ -111,7 +55,7 @@ export default function App() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentPersona, setCurrentPersona] = useState(PERSONAS[0]);
   const [boxState, setBoxState] = useState<'idle' | 'processing' | 'revealed'>('idle');
-  
+
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const t = TRANSLATIONS[lang];
 
@@ -125,14 +69,18 @@ export default function App() {
 
   const backgroundX = useTransform(smoothMouseX, [-0.5, 0.5], ['-2%', '2%']);
   const backgroundY = useTransform(smoothMouseY, [-0.5, 0.5], ['-2%', '2%']);
-  
+
   const boxRotateX = useTransform(smoothMouseY, [-0.5, 0.5], [5, -5]);
   const boxRotateY = useTransform(smoothMouseX, [-0.5, 0.5], [-5, 5]);
+
+  // Moved from inline JSX to comply with Rules of Hooks
+  const orbX = useTransform(smoothMouseX, [-0.5, 0.5], ['-100%', '0%']);
+  const orbY = useTransform(smoothMouseY, [-0.5, 0.5], ['-100%', '0%']);
 
   useEffect(() => {
     // Only apply mousemove on devices that likely have a mouse (not touch-only)
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-    
+
     if (!isTouchDevice) {
       const handleMouseMove = (e: MouseEvent) => {
         const x = (e.clientX / window.innerWidth) - 0.5;
@@ -148,39 +96,36 @@ export default function App() {
 
   const handleProcess = async () => {
     if (!input.trim()) return;
-    
+
     let nextPersona = PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
     while (nextPersona.id === currentPersona.id && PERSONAS.length > 1) {
       nextPersona = PERSONAS[Math.floor(Math.random() * PERSONAS.length)];
     }
-    
+
     setCurrentPersona(nextPersona);
     setIsProcessing(true);
     setBoxState('processing');
     setOutput('');
 
     try {
-      let finalInstruction = nextPersona.instruction;
-      if (nextPersona.id === 'alien') {
-        finalInstruction += "\n\nIMPORTANT: Respond mostly in the exact same language that the user used in their input, but frequently interject with bizarre, unpronounceable alien symbols (like ⍙⟒⍀⏁) or made-up alien words.";
-      } else if (nextPersona.id === 'bard') {
-        finalInstruction += "\n\nIMPORTANT: Respond in the exact same language as the user's input. If the user uses Chinese, reply in a theatrical, ancient Chinese poetic style (文言文/武侠风). If English, use Shakespearean English.";
-      } else {
-        finalInstruction += "\n\nIMPORTANT: You MUST respond in the exact same language that the user used in their input.";
+      // Run the API call and the minimum display delay in parallel
+      const [res] = await Promise.all([
+        fetch('/api/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ input, personaId: nextPersona.id }),
+        }),
+        new Promise(resolve => setTimeout(resolve, 2000)),
+      ]);
+
+      if (!res.ok) {
+        setOutput(t.error);
+        setBoxState('revealed');
+        return;
       }
 
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: input,
-        config: {
-          systemInstruction: finalInstruction,
-          temperature: 0.9,
-        }
-      });
-      
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      setOutput(response.text || t.silent);
+      const data = await res.json() as { text?: string; error?: string };
+      setOutput(data.text || t.silent);
       setBoxState('revealed');
     } catch (error) {
       console.error('Error generating content:', error);
@@ -200,7 +145,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 font-sans selection:bg-zinc-800 relative overflow-hidden">
-      
+
       {/* Language Toggle */}
       <div className="absolute top-4 right-4 md:top-6 md:right-6 z-50">
         <button
@@ -213,18 +158,18 @@ export default function App() {
       </div>
 
       {/* Parallax Background Grid */}
-      <motion.div 
+      <motion.div
         className="absolute inset-0 z-0 opacity-20 pointer-events-none"
         style={{ x: backgroundX, y: backgroundY }}
       >
-        <div className="absolute inset-0" 
+        <div className="absolute inset-0"
              style={{
                backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)',
                backgroundSize: '40px 40px'
-             }} 
+             }}
         />
         {/* Glowing orb with subtle breathing animation for mobile where mousemove isn't active */}
-        <motion.div 
+        <motion.div
           className="absolute w-[600px] h-[600px] md:w-[800px] md:h-[800px] rounded-full bg-zinc-800/30 blur-[100px] md:blur-[120px]"
           animate={{
             scale: [1, 1.05, 1],
@@ -234,17 +179,17 @@ export default function App() {
           style={{
             left: '50%',
             top: '50%',
-            x: useTransform(smoothMouseX, [-0.5, 0.5], ['-100%', '0%']),
-            y: useTransform(smoothMouseY, [-0.5, 0.5], ['-100%', '0%']),
+            x: orbX,
+            y: orbY,
           }}
         />
       </motion.div>
 
       <div className="max-w-2xl w-full flex flex-col items-center z-10 mt-12 md:mt-0">
-        
+
         <AnimatePresence>
           {boxState === 'idle' && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
@@ -252,9 +197,9 @@ export default function App() {
               className="overflow-hidden w-full"
             >
               <div className="text-center mb-8 md:mb-12 pt-2">
-                <motion.div 
+                <motion.div
                   className="inline-flex items-center justify-center p-3 mb-4 md:mb-6 rounded-full bg-zinc-900 border border-zinc-800 shadow-lg"
-                  animate={{ 
+                  animate={{
                     boxShadow: ["0px 0px 0px rgba(255,255,255,0)", "0px 0px 20px rgba(255,255,255,0.05)", "0px 0px 0px rgba(255,255,255,0)"]
                   }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
@@ -279,9 +224,9 @@ export default function App() {
                 key="input-box"
                 initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
                 animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-                exit={{ 
-                  opacity: 0, 
-                  scale: 0.8, 
+                exit={{
+                  opacity: 0,
+                  scale: 0.8,
                   rotateX: -20,
                   y: 40,
                   filter: "blur(10px)"
@@ -295,6 +240,7 @@ export default function App() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder={t.placeholder}
+                  maxLength={MAX_INPUT_LENGTH}
                   className="w-full h-32 md:h-40 bg-transparent text-lg md:text-2xl text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none"
                   // Removed autoFocus to prevent keyboard from popping up immediately on mobile
                 />
@@ -317,14 +263,14 @@ export default function App() {
               <motion.div
                 key="processing-box"
                 initial={{ opacity: 0, scale: 0.8, y: -40, rotateX: 20 }}
-                animate={{ 
-                  opacity: 1, 
+                animate={{
+                  opacity: 1,
                   scale: 1,
                   y: 0,
                   rotateX: 0,
                 }}
-                exit={{ 
-                  opacity: 0, 
+                exit={{
+                  opacity: 0,
                   scale: 1.1,
                   filter: "blur(20px)",
                   transition: { duration: 0.4 }
@@ -332,23 +278,23 @@ export default function App() {
                 transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
                 className="w-full h-56 md:h-64 relative flex flex-col items-center justify-center transform-gpu"
               >
-                <motion.div 
+                <motion.div
                   className="absolute inset-0 bg-zinc-800 rounded-2xl blur-xl"
-                  animate={{ 
+                  animate={{
                     opacity: [0.2, 0.5, 0.2],
                     scale: [0.95, 1.05, 0.95]
                   }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 />
-                
-                <motion.div 
+
+                <motion.div
                   className="absolute inset-0 bg-zinc-900 border border-zinc-700 rounded-2xl flex flex-col items-center justify-center shadow-2xl overflow-hidden"
-                  animate={{ 
+                  animate={{
                     boxShadow: ["0px 0px 0px rgba(255,255,255,0)", "0px 0px 40px rgba(255,255,255,0.05)", "0px 0px 0px rgba(255,255,255,0)"]
                   }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <motion.div 
+                  <motion.div
                     className="absolute top-0 left-0 w-full h-1 bg-zinc-400/30 blur-sm"
                     animate={{ y: [0, 256, 0] }}
                     transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
@@ -360,7 +306,7 @@ export default function App() {
                   >
                     <Sparkles className="text-zinc-400 mb-4 md:mb-6" size={32} />
                   </motion.div>
-                  <motion.p 
+                  <motion.p
                     className="text-base md:text-xl text-zinc-300 font-mono tracking-widest text-center px-4 md:px-6"
                     animate={{ opacity: [0.5, 1, 0.5] }}
                     transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
@@ -374,29 +320,29 @@ export default function App() {
             {boxState === 'revealed' && (
               <motion.div
                 key="revealed-box"
-                initial={{ 
-                  opacity: 0, 
-                  scale: 0.9, 
+                initial={{
+                  opacity: 0,
+                  scale: 0.9,
                   rotateX: -30,
                   y: 40,
                   filter: "blur(10px)"
                 }}
-                animate={{ 
-                  opacity: 1, 
-                  scale: 1, 
+                animate={{
+                  opacity: 1,
+                  scale: 1,
                   rotateX: 0,
                   y: 0,
                   filter: "blur(0px)"
                 }}
-                transition={{ 
-                  duration: 0.8, 
+                transition={{
+                  duration: 0.8,
                   ease: [0.23, 1, 0.32, 1],
                   type: "spring",
                   bounce: 0.4
                 }}
                 className="w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden transform-gpu"
               >
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 1 }}
                   animate={{ opacity: 0 }}
                   transition={{ duration: 0.8, ease: "easeOut" }}
@@ -404,8 +350,8 @@ export default function App() {
                 />
 
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-zinc-400 to-transparent opacity-30" />
-                
-                <motion.div 
+
+                <motion.div
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.3, duration: 0.5 }}
@@ -414,8 +360,8 @@ export default function App() {
                   <Sparkles size={14} className="text-zinc-400" />
                   <span>{t.complete}</span>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.5, duration: 0.6 }}
@@ -425,8 +371,8 @@ export default function App() {
                     <Markdown>{output}</Markdown>
                   </div>
                 </motion.div>
-                
-                <motion.div 
+
+                <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 1, duration: 0.5 }}
@@ -446,8 +392,8 @@ export default function App() {
             )}
           </AnimatePresence>
         </div>
-        
-        <motion.div 
+
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1 }}

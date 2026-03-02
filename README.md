@@ -1,20 +1,42 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+# The Black Box
 
-# Run and deploy your AI Studio app
-
-This contains everything you need to run your app locally.
-
-View your app in AI Studio: https://ai.studio/apps/1a84dc60-37eb-4785-9179-08a65d9a01e5
+A fun web app where you drop in any thought and a random AI persona transforms it into something unexpected. Built with React + Vite on the frontend and Cloudflare Workers on the backend.
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
-
+**Prerequisites:** Node.js
 
 1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```
+   npm install
+   ```
+
+2. Set up environment variables:
+   ```
+   cp .dev.vars.example .dev.vars
+   ```
+   Then edit `.dev.vars` and replace `your_key_here` with your [Gemini API key](https://aistudio.google.com/apikey).
+
+3. In one terminal, start the worker:
+   ```
+   npm run dev:worker
+   ```
+
+4. In another terminal, start the frontend:
+   ```
+   npm run dev
+   ```
+
+5. Open [http://localhost:3000](http://localhost:3000)
+
+## Deploy
+
+```
+npm run deploy
+```
+
+Set `GEMINI_API_KEY` as a secret in your Cloudflare Workers dashboard before deploying:
+
+```
+wrangler secret put GEMINI_API_KEY
+```
