@@ -15,7 +15,7 @@ function generateId(): string {
   return Array.from(bytes, b => chars[b % chars.length]).join('');
 }
 
-const GEMINI_MODEL = 'gemini-2.5-flash';
+const GEMINI_MODEL = 'gemini-3-flash';
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const MAX_INPUT_LENGTH = 2000;
