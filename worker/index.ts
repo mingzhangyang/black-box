@@ -1,3 +1,5 @@
+/// <reference types="@cloudflare/workers-types" />
+
 interface Env {
   ASSETS: { fetch(r: Request): Promise<Response> };
   GEMINI_API_KEY: string;
