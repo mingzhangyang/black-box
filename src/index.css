@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+.markdown-body {
+  font-family: Georgia, 'Palatino Linotype', Palatino, 'Book Antiqua', serif;
+}
+
 .markdown-body p {
   margin-bottom: 1rem;
 }

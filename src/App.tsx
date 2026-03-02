@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring, useTransform } from 'motion/react';
-import { Sparkles, Send, RefreshCw, Box, Globe } from 'lucide-react';
+import { Sparkles, Inbox, RefreshCw, Box, Globe } from 'lucide-react';
 import Markdown from 'react-markdown';
 
 const TRANSLATIONS = {
@@ -10,6 +10,7 @@ const TRANSLATIONS = {
     placeholder: "Type anything here... a sentence, a complaint, a random thought.",
     dropBtn: "Drop into the Box",
     complete: "Transformation Complete",
+    errorBadge: "Something Went Wrong",
     tryAnother: "Try another",
     warning: "Warning: Results may be highly unpredictable. This is just a game for fun, please don't take it seriously.",
     error: "The black box malfunctioned. Please try again.",
@@ -21,6 +22,7 @@ const TRANSLATIONS = {
     placeholder: "在这里输入任何内容……一句话、一句抱怨、一个随机的想法。",
     dropBtn: "丢入黑箱",
     complete: "转化完成",
+    errorBadge: "发生错误",
     tryAnother: "再试一次",
     warning: "警告：结果可能极具不可预测性。这只是一个供娱乐的文字游戏，请勿当真。",
     error: "黑箱发生故障，请重试。",
@@ -49,14 +51,16 @@ const PERSONAS = [
 const MAX_INPUT_LENGTH = 2000;
 
 export default function App() {
-  const [lang, setLang] = useState<'en' | 'zh'>('zh');
+  const [lang, setLang] = useState<'en' | 'zh'>(() =>
+    navigator.language.startsWith('zh') ? 'zh' : 'en'
+  );
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [isError, setIsError] = useState(false);
   const [currentPersona, setCurrentPersona] = useState(PERSONAS[0]);
   const [boxState, setBoxState] = useState<'idle' | 'processing' | 'revealed'>('idle');
 
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const tryAnotherRef = useRef<HTMLButtonElement>(null);
   const t = TRANSLATIONS[lang];
 
   // Parallax effect values
@@ -73,12 +77,10 @@ export default function App() {
   const boxRotateX = useTransform(smoothMouseY, [-0.5, 0.5], [5, -5]);
   const boxRotateY = useTransform(smoothMouseX, [-0.5, 0.5], [-5, 5]);
 
-  // Moved from inline JSX to comply with Rules of Hooks
   const orbX = useTransform(smoothMouseX, [-0.5, 0.5], ['-100%', '0%']);
   const orbY = useTransform(smoothMouseY, [-0.5, 0.5], ['-100%', '0%']);
 
   useEffect(() => {
-    // Only apply mousemove on devices that likely have a mouse (not touch-only)
     const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
 
     if (!isTouchDevice) {
@@ -94,6 +96,14 @@ export default function App() {
     }
   }, [mouseX, mouseY]);
 
+  // Move focus to "Try another" after reveal animation completes
+  useEffect(() => {
+    if (boxState === 'revealed') {
+      const timer = setTimeout(() => tryAnotherRef.current?.focus(), 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [boxState]);
+
   const handleProcess = async () => {
     if (!input.trim()) return;
 
@@ -103,59 +113,57 @@ export default function App() {
     }
 
     setCurrentPersona(nextPersona);
-    setIsProcessing(true);
+    setIsError(false);
     setBoxState('processing');
     setOutput('');
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000);
+
     try {
-      // Run the API call and the minimum display delay in parallel
       const [res] = await Promise.all([
         fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ input, personaId: nextPersona.id }),
+          signal: controller.signal,
         }),
         new Promise(resolve => setTimeout(resolve, 2000)),
       ]);
 
       if (!res.ok) {
+        setIsError(true);
         setOutput(t.error);
         setBoxState('revealed');
         return;
       }
 
       const data = await res.json() as { text?: string; error?: string };
-      setOutput(data.text || t.silent);
+      if (data.error) {
+        setIsError(true);
+        setOutput(t.error);
+      } else {
+        setOutput(data.text || t.silent);
+      }
       setBoxState('revealed');
-    } catch (error) {
-      console.error('Error generating content:', error);
+    } catch (err) {
+      console.error('Error generating content:', err);
+      setIsError(true);
       setOutput(t.error);
       setBoxState('revealed');
     } finally {
-      setIsProcessing(false);
+      clearTimeout(timeoutId);
     }
   };
 
   const handleReset = () => {
     setBoxState('idle');
-    setInput('');
     setOutput('');
-    // Removed auto-focus on reset for mobile friendliness
+    // Input is preserved so users can retry or edit without retyping
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 font-sans selection:bg-zinc-800 relative overflow-hidden">
-
-      {/* Language Toggle */}
-      <div className="absolute top-4 right-4 md:top-6 md:right-6 z-50">
-        <button
-          onClick={() => setLang(l => l === 'en' ? 'zh' : 'en')}
-          className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-zinc-800 text-zinc-300 px-3 py-2 md:px-4 md:py-2 rounded-full hover:text-white hover:bg-zinc-800 transition-colors text-xs md:text-sm font-medium shadow-lg"
-        >
-          <Globe size={16} />
-          {lang === 'en' ? '中文' : 'English'}
-        </button>
-      </div>
+    <div className="min-h-screen bg-zinc-950 text-zinc-100 flex flex-col font-sans selection:bg-zinc-800 relative overflow-hidden">
 
       {/* Parallax Background Grid */}
       <motion.div
@@ -168,7 +176,6 @@ export default function App() {
                backgroundSize: '40px 40px'
              }}
         />
-        {/* Glowing orb with subtle breathing animation for mobile where mousemove isn't active */}
         <motion.div
           className="absolute w-[600px] h-[600px] md:w-[800px] md:h-[800px] rounded-full bg-zinc-800/30 blur-[100px] md:blur-[120px]"
           animate={{
@@ -185,222 +192,250 @@ export default function App() {
         />
       </motion.div>
 
-      <div className="max-w-2xl w-full flex flex-col items-center z-10 mt-12 md:mt-0">
+      {/* Language Toggle — in document flow to avoid overlap on mobile */}
+      <div className="flex justify-end px-4 pt-4 md:px-6 md:pt-6 z-50 relative">
+        <button
+          onClick={() => setLang(l => l === 'en' ? 'zh' : 'en')}
+          aria-label={lang === 'en' ? 'Switch to Chinese' : 'Switch to English'}
+          className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-zinc-800 text-zinc-300 px-3 py-2 md:px-4 md:py-2 rounded-full hover:text-white hover:bg-zinc-800 transition-colors text-xs md:text-sm font-medium shadow-lg"
+        >
+          <Globe size={16} />
+          {lang === 'en' ? '中文' : 'English'}
+        </button>
+      </div>
 
-        <AnimatePresence>
-          {boxState === 'idle' && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-              className="overflow-hidden w-full"
-            >
-              <div className="text-center mb-8 md:mb-12 pt-2">
-                <motion.div
-                  className="inline-flex items-center justify-center p-3 mb-4 md:mb-6 rounded-full bg-zinc-900 border border-zinc-800 shadow-lg"
-                  animate={{
-                    boxShadow: ["0px 0px 0px rgba(255,255,255,0)", "0px 0px 20px rgba(255,255,255,0.05)", "0px 0px 0px rgba(255,255,255,0)"]
-                  }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                >
-                  <Box size={28} className="text-zinc-400 md:w-8 md:h-8" />
-                </motion.div>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 md:mb-4 text-zinc-100">
-                  {t.title}
-                </h1>
-                <p className="text-zinc-400 text-base md:text-lg max-w-md mx-auto px-4">
-                  {t.subtitle}
-                </p>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col items-center justify-center px-4 pb-4 sm:px-6 sm:pb-6 md:px-8 md:pb-8">
+        <div className="max-w-2xl w-full flex flex-col items-center z-10">
 
-        <div className="w-full relative" style={{ perspective: '1200px' }}>
           <AnimatePresence mode="wait">
             {boxState === 'idle' && (
               <motion.div
-                key="input-box"
-                initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
-                animate={{ opacity: 1, scale: 1, rotateX: 0 }}
-                exit={{
-                  opacity: 0,
-                  scale: 0.8,
-                  rotateX: -20,
-                  y: 40,
-                  filter: "blur(10px)"
-                }}
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
                 transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
-                style={{ rotateX: boxRotateX, rotateY: boxRotateY }}
-                className="w-full bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-5 md:p-6 shadow-2xl transform-gpu"
+                className="overflow-hidden w-full"
               >
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder={t.placeholder}
-                  maxLength={MAX_INPUT_LENGTH}
-                  className="w-full h-32 md:h-40 bg-transparent text-lg md:text-2xl text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none"
-                  // Removed autoFocus to prevent keyboard from popping up immediately on mobile
-                />
-                <div className="flex justify-end mt-4">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleProcess}
-                    disabled={!input.trim()}
-                    className="w-full md:w-auto flex items-center justify-center gap-2 bg-zinc-100 text-zinc-950 px-6 py-3.5 md:py-3 rounded-full font-medium hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+                <div className="text-center mb-8 md:mb-12 pt-2">
+                  <motion.div
+                    className="inline-flex items-center justify-center p-3 mb-4 md:mb-6 rounded-full bg-zinc-900 border border-zinc-800 shadow-lg"
+                    animate={{
+                      boxShadow: ["0px 0px 0px rgba(255,255,255,0)", "0px 0px 20px rgba(255,255,255,0.05)", "0px 0px 0px rgba(255,255,255,0)"]
+                    }}
+                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    {t.dropBtn}
-                    <Send size={18} className="group-hover:translate-x-1 transition-transform" />
-                  </motion.button>
+                    <Box size={28} className="text-zinc-400 md:w-8 md:h-8" />
+                  </motion.div>
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-3 md:mb-4 text-zinc-100">
+                    {t.title}
+                  </h1>
+                  <p className="text-zinc-400 text-base md:text-lg max-w-md mx-auto px-4">
+                    {t.subtitle}
+                  </p>
                 </div>
               </motion.div>
             )}
+          </AnimatePresence>
 
-            {boxState === 'processing' && (
-              <motion.div
-                key="processing-box"
-                initial={{ opacity: 0, scale: 0.8, y: -40, rotateX: 20 }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  y: 0,
-                  rotateX: 0,
-                }}
-                exit={{
-                  opacity: 0,
-                  scale: 1.1,
-                  filter: "blur(20px)",
-                  transition: { duration: 0.4 }
-                }}
-                transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
-                className="w-full h-56 md:h-64 relative flex flex-col items-center justify-center transform-gpu"
-              >
+          <div className="w-full relative" style={{ perspective: '1200px' }}>
+            <AnimatePresence mode="wait">
+              {boxState === 'idle' && (
                 <motion.div
-                  className="absolute inset-0 bg-zinc-800 rounded-2xl blur-xl"
-                  animate={{
-                    opacity: [0.2, 0.5, 0.2],
-                    scale: [0.95, 1.05, 0.95]
+                  key="input-box"
+                  initial={{ opacity: 0, scale: 0.95, rotateX: 10 }}
+                  animate={{ opacity: 1, scale: 1, rotateX: 0 }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0.8,
+                    rotateX: -20,
+                    y: 40,
+                    filter: "blur(10px)"
                   }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                />
+                  transition={{ duration: 0.5, ease: [0.23, 1, 0.32, 1] }}
+                  style={{ rotateX: boxRotateX, rotateY: boxRotateY }}
+                  className="w-full bg-zinc-900/80 backdrop-blur-xl border border-zinc-800 rounded-2xl p-5 md:p-6 shadow-2xl transform-gpu"
+                >
+                  <textarea
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && input.trim()) {
+                        handleProcess();
+                      }
+                    }}
+                    placeholder={t.placeholder}
+                    maxLength={MAX_INPUT_LENGTH}
+                    className="w-full h-32 md:h-40 bg-transparent text-lg md:text-2xl text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none"
+                  />
+                  <div className="flex items-center justify-between mt-4">
+                    <span className="text-zinc-600 text-xs font-mono">
+                      {input.length}/{MAX_INPUT_LENGTH}
+                    </span>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={handleProcess}
+                      disabled={!input.trim()}
+                      className="flex items-center justify-center gap-2 bg-zinc-100 text-zinc-950 px-6 py-3.5 md:py-3 rounded-full font-medium hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed group"
+                    >
+                      {t.dropBtn}
+                      <Inbox size={18} className="group-hover:translate-y-0.5 transition-transform" />
+                    </motion.button>
+                  </div>
+                </motion.div>
+              )}
 
+              {boxState === 'processing' && (
                 <motion.div
-                  className="absolute inset-0 bg-zinc-900 border border-zinc-700 rounded-2xl flex flex-col items-center justify-center shadow-2xl overflow-hidden"
+                  key="processing-box"
+                  initial={{ opacity: 0, scale: 0.8, y: -40, rotateX: 20 }}
                   animate={{
-                    boxShadow: ["0px 0px 0px rgba(255,255,255,0)", "0px 0px 40px rgba(255,255,255,0.05)", "0px 0px 0px rgba(255,255,255,0)"]
+                    opacity: 1,
+                    scale: 1,
+                    y: 0,
+                    rotateX: 0,
                   }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  exit={{
+                    opacity: 0,
+                    scale: 1.1,
+                    filter: "blur(20px)",
+                    transition: { duration: 0.4 }
+                  }}
+                  transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+                  className="w-full h-56 md:h-64 relative flex flex-col items-center justify-center transform-gpu"
                 >
                   <motion.div
-                    className="absolute top-0 left-0 w-full h-1 bg-zinc-400/30 blur-sm"
-                    animate={{ y: [0, 256, 0] }}
-                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 bg-zinc-800 rounded-2xl blur-xl"
+                    animate={{
+                      opacity: [0.2, 0.5, 0.2],
+                      scale: [0.95, 1.05, 0.95]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   />
 
                   <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 bg-zinc-900 border border-zinc-700 rounded-2xl flex flex-col items-center justify-center shadow-2xl overflow-hidden"
+                    animate={{
+                      boxShadow: ["0px 0px 0px rgba(255,255,255,0)", "0px 0px 40px rgba(255,255,255,0.05)", "0px 0px 0px rgba(255,255,255,0)"]
+                    }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                   >
-                    <Sparkles className="text-zinc-400 mb-4 md:mb-6" size={32} />
+                    <motion.div
+                      className="absolute top-0 left-0 w-full h-1 bg-zinc-400/30 blur-sm"
+                      animate={{ y: [0, 220, 0] }}
+                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                    />
+
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                    >
+                      <Sparkles className="text-zinc-400 mb-4 md:mb-6" size={32} />
+                    </motion.div>
+                    <motion.p
+                      className={`text-base md:text-xl text-zinc-300 font-mono ${lang === 'zh' ? 'tracking-normal' : 'tracking-widest'} text-center px-4 md:px-6`}
+                      animate={{ opacity: [0.5, 1, 0.5] }}
+                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      {currentPersona.processingText[lang]}
+                    </motion.p>
                   </motion.div>
-                  <motion.p
-                    className="text-base md:text-xl text-zinc-300 font-mono tracking-widest text-center px-4 md:px-6"
-                    animate={{ opacity: [0.5, 1, 0.5] }}
-                    transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                  >
-                    {currentPersona.processingText[lang]}
-                  </motion.p>
                 </motion.div>
-              </motion.div>
-            )}
+              )}
 
-            {boxState === 'revealed' && (
+              {boxState === 'revealed' && (
+                <motion.div
+                  key="revealed-box"
+                  initial={{
+                    opacity: 0,
+                    scale: 0.9,
+                    rotateX: -30,
+                    y: 40,
+                    filter: "blur(10px)"
+                  }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    rotateX: 0,
+                    y: 0,
+                    filter: "blur(0px)"
+                  }}
+                  transition={{
+                    duration: 0.8,
+                    ease: [0.23, 1, 0.32, 1],
+                    type: "spring",
+                    bounce: 0.4
+                  }}
+                  className="w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden transform-gpu"
+                >
+                  <motion.div
+                    initial={{ opacity: 1 }}
+                    animate={{ opacity: 0 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                    className="absolute inset-0 bg-white z-20 pointer-events-none"
+                  />
+
+                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-zinc-400 to-transparent opacity-30" />
+
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: 0.3, duration: 0.5 }}
+                    className={`mb-4 md:mb-6 flex items-center gap-2 md:gap-3 text-xs md:text-sm font-mono uppercase tracking-wider ${isError ? 'text-red-400/70' : 'text-zinc-500'}`}
+                  >
+                    <Sparkles size={14} className={isError ? 'text-red-400/70' : 'text-zinc-400'} />
+                    <span>{isError ? t.errorBadge : t.complete}</span>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.6 }}
+                    className="max-w-none"
+                  >
+                    <div className="markdown-body text-lg md:text-2xl leading-relaxed text-zinc-200">
+                      <Markdown>{output}</Markdown>
+                    </div>
+                  </motion.div>
+
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1, duration: 0.5 }}
+                    className="flex justify-center mt-8 md:mt-12"
+                  >
+                    <motion.button
+                      ref={tryAnotherRef}
+                      whileHover={{ scale: 1.05, backgroundColor: "rgba(39, 39, 42, 1)" }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={handleReset}
+                      className="w-full md:w-auto flex items-center justify-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors px-6 py-3.5 md:py-3 rounded-full bg-zinc-800/50 border border-zinc-700/50"
+                    >
+                      <RefreshCw size={16} />
+                      {t.tryAnother}
+                    </motion.button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <AnimatePresence>
+            {boxState === 'idle' && (
               <motion.div
-                key="revealed-box"
-                initial={{
-                  opacity: 0,
-                  scale: 0.9,
-                  rotateX: -30,
-                  y: 40,
-                  filter: "blur(10px)"
-                }}
-                animate={{
-                  opacity: 1,
-                  scale: 1,
-                  rotateX: 0,
-                  y: 0,
-                  filter: "blur(0px)"
-                }}
-                transition={{
-                  duration: 0.8,
-                  ease: [0.23, 1, 0.32, 1],
-                  type: "spring",
-                  bounce: 0.4
-                }}
-                className="w-full bg-zinc-900 border border-zinc-700 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden transform-gpu"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ delay: 1 }}
+                className="mt-8 md:mt-12 text-zinc-500 text-xs md:text-sm font-mono text-center max-w-lg px-4"
               >
-                <motion.div
-                  initial={{ opacity: 1 }}
-                  animate={{ opacity: 0 }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  className="absolute inset-0 bg-white z-20 pointer-events-none"
-                />
-
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-zinc-400 to-transparent opacity-30" />
-
-                <motion.div
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.3, duration: 0.5 }}
-                  className="mb-4 md:mb-6 flex items-center gap-2 md:gap-3 text-zinc-500 text-xs md:text-sm font-mono uppercase tracking-wider"
-                >
-                  <Sparkles size={14} className="text-zinc-400" />
-                  <span>{t.complete}</span>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5, duration: 0.6 }}
-                  className="max-w-none"
-                >
-                  <div className="markdown-body text-lg md:text-2xl leading-relaxed text-zinc-200 font-serif">
-                    <Markdown>{output}</Markdown>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 1, duration: 0.5 }}
-                  className="flex justify-center mt-8 md:mt-12"
-                >
-                  <motion.button
-                    whileHover={{ scale: 1.05, backgroundColor: "rgba(39, 39, 42, 1)" }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleReset}
-                    className="w-full md:w-auto flex items-center justify-center gap-2 text-zinc-400 hover:text-zinc-100 transition-colors px-6 py-3.5 md:py-3 rounded-full bg-zinc-800/50 border border-zinc-700/50"
-                  >
-                    <RefreshCw size={16} />
-                    {t.tryAnother}
-                  </motion.button>
-                </motion.div>
+                {t.warning}
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 1 }}
-          className="mt-8 md:mt-12 text-zinc-500 text-xs md:text-sm font-mono text-center max-w-lg px-4"
-        >
-          {t.warning}
-        </motion.div>
+        </div>
       </div>
     </div>
   );
