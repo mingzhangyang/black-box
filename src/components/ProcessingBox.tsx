@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { Sparkles } from 'lucide-react';
-import type { Lang } from '../constants';
+import { usesTightTracking } from '../i18n';
+import type { Lang } from '../i18n';
 
 interface Props {
   processingText: string;
@@ -35,7 +36,7 @@ export default function ProcessingBox({ processingText, lang }: Props) {
           <Sparkles className="text-zinc-400 mb-4 md:mb-6" size={32} />
         </motion.div>
         <motion.p
-          className={`text-base md:text-xl text-zinc-300 font-mono ${lang === 'zh' ? 'tracking-normal' : 'tracking-widest'} text-center px-4 md:px-6`}
+          className={`text-base md:text-xl text-zinc-300 font-mono ${usesTightTracking(lang) ? 'tracking-normal' : 'tracking-widest'} text-center px-4 md:px-6`}
           animate={{ opacity: [0.5, 1, 0.5] }}
           transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
         >

@@ -1,9 +1,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Globe } from 'lucide-react';
 import Footer from './Footer';
 import { TRANSLATIONS, PERSONAS, MAX_INPUT_LENGTH } from './constants';
-import type { Lang, BoxState } from './constants';
+import type { BoxState } from './constants';
+import LanguageMenu from './components/LanguageMenu';
+import { navigateToLocalizedPage, persistLanguage } from './i18n';
+import { buildLocalizedPath } from './siteLanguage';
+import type { Lang } from './siteLanguage';
 import { useParallax } from './hooks/useParallax';
 import ParallaxBackground from './components/ParallaxBackground';
 import HeroHeader from './components/HeroHeader';
@@ -11,10 +14,14 @@ import InputBox from './components/InputBox';
 import ProcessingBox from './components/ProcessingBox';
 import ResultBox from './components/ResultBox';
 
-export default function App() {
-  const [lang, setLang] = useState<Lang>(() =>
-    navigator.language.startsWith('zh') ? 'zh' : 'en'
-  );
+interface Props {
+  initialLang: Lang;
+  initialShareId?: string;
+}
+
+export default function App({ initialLang, initialShareId }: Props) {
+  const [lang, setLang] = useState(initialLang);
+  const [activeShareId, setActiveShareId] = useState(initialShareId);
   const [input, setInput] = useState('');
   const [output, setOutput] = useState('');
   const [isError, setIsError] = useState(false);
@@ -29,19 +36,16 @@ export default function App() {
   const { backgroundX, backgroundY, boxRotateX, boxRotateY, orbX, orbY } = useParallax();
 
   useEffect(() => {
-    document.title = lang === 'zh'
-      ? '神秘黑箱 — 把你的想法丢进去'
-      : 'The Black Box — Drop Your Thoughts In';
-    document.documentElement.lang = lang === 'zh' ? 'zh' : 'en';
+    document.title = t.appTitle;
+    document.documentElement.lang = lang;
+    persistLanguage(lang);
   }, [lang]);
 
   // Load shared result from URL on mount
   useEffect(() => {
-    const match = window.location.pathname.match(/^\/s\/([A-Za-z0-9]{8})$/);
-    if (!match) return;
-    const shareId = match[1];
+    if (!initialShareId) return;
     setBoxState('processing');
-    fetch(`/api/share/${shareId}`)
+    fetch(`/api/share/${initialShareId}`)
       .then(res => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data: { input: string; output: string; personaId: string }) => {
         const persona = PERSONAS.find(p => p.id === data.personaId) ?? PERSONAS[0];
@@ -51,7 +55,7 @@ export default function App() {
         setBoxState('revealed');
       })
       .catch(() => setBoxState('idle'));
-  }, []);
+  }, [initialShareId]);
 
   // Move focus to "Try another" after reveal animation completes
   useEffect(() => {
@@ -124,9 +128,11 @@ export default function App() {
       });
       if (!res.ok) throw new Error();
       const { id } = await res.json() as { id: string };
-      const url = `${window.location.origin}/s/${id}`;
+      const sharePath = buildLocalizedPath({ lang, page: 'share', shareId: id });
+      const url = `${window.location.origin}${sharePath}`;
       await navigator.clipboard.writeText(url);
-      history.replaceState(null, '', `/s/${id}`);
+      history.replaceState(null, '', sharePath);
+      setActiveShareId(id);
       setShareUrl(url);
       setShareStatus('idle');
     } catch {
@@ -140,8 +146,10 @@ export default function App() {
     setOutput('');
     setShareStatus('idle');
     setShareUrl('');
-    if (window.location.pathname !== '/') {
-      history.pushState(null, '', '/');
+    setActiveShareId(undefined);
+    const homePath = buildLocalizedPath({ lang, page: 'home' });
+    if (window.location.pathname !== homePath) {
+      history.pushState(null, '', homePath);
     }
     // Input is preserved so users can retry or edit without retyping
   };
@@ -158,14 +166,19 @@ export default function App() {
 
       {/* Language Toggle — in document flow to avoid overlap on mobile */}
       <div className="flex justify-end px-4 pt-4 md:px-6 md:pt-6 z-50 relative">
-        <button
-          onClick={() => setLang(l => l === 'en' ? 'zh' : 'en')}
-          aria-label={lang === 'en' ? 'Switch to Chinese' : 'Switch to English'}
-          className="flex items-center gap-2 bg-zinc-900/80 backdrop-blur-md border border-zinc-800 text-zinc-300 px-3 py-2 md:px-4 md:py-2 rounded-full hover:text-white hover:bg-zinc-800 transition-colors text-xs md:text-sm font-medium shadow-lg"
-        >
-          <Globe size={16} />
-          {lang === 'en' ? '中文' : 'English'}
-        </button>
+        <LanguageMenu
+          lang={lang}
+          onChange={(nextLang) => {
+            navigateToLocalizedPage({
+              lang: nextLang,
+              page: activeShareId ? 'share' : 'home',
+              shareId: activeShareId,
+            });
+            setLang(nextLang);
+          }}
+          buttonLabel={t.languageButton}
+          menuLabel={t.languageMenuLabel}
+        />
       </div>
 
       {/* Main Content */}
