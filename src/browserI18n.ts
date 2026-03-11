@@ -30,7 +30,7 @@ export function persistLanguage(lang: Lang) {
 export function navigateToLocalizedPage(route: { lang: Lang; page: 'home' | 'privacy' | 'share'; shareId?: string }) {
   const nextPath = buildLocalizedPath(route);
   if (window.location.pathname === nextPath) return;
-  window.location.assign(nextPath);
+  window.history.replaceState(null, '', nextPath);
 }
 
 export function usesTightTracking(lang: Lang) {

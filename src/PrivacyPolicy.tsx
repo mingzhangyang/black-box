@@ -33,8 +33,8 @@ export default function PrivacyPolicy({ initialLang }: { initialLang: Lang }) {
         <LanguageMenu
           lang={lang}
           onChange={(nextLang) => {
-            navigateToLocalizedPage({ lang: nextLang, page: 'privacy' });
             setLang(nextLang);
+            navigateToLocalizedPage({ lang: nextLang, page: 'privacy' });
           }}
           buttonLabel={t.languageButton}
           menuLabel={t.languageMenuLabel}

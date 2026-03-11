@@ -169,12 +169,12 @@ export default function App({ initialLang, initialShareId }: Props) {
         <LanguageMenu
           lang={lang}
           onChange={(nextLang) => {
+            setLang(nextLang);
             navigateToLocalizedPage({
               lang: nextLang,
               page: activeShareId ? 'share' : 'home',
               shareId: activeShareId,
             });
-            setLang(nextLang);
           }}
           buttonLabel={t.languageButton}
           menuLabel={t.languageMenuLabel}
