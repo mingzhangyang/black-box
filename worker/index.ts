@@ -37,8 +37,10 @@ const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 const MAX_INPUT_LENGTH = 2000;
 const RATE_LIMIT_REQUESTS = 10;
 const RATE_LIMIT_WINDOW_MS = 60_000;
-const SEO_IMAGE_PATH = '/og-image.svg';
+const SEO_IMAGE_PATH = '/og-image.png';
+const SEO_LOGO_PATH = '/logo-1024.png';
 const SITE_ORIGIN = 'https://black-box.orangely.xyz';
+const INDEXABLE_ROBOTS = 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 
 const HOME_SEO: Record<Lang, { title: string; description: string; fallbackHtml: string; noscriptHtml: string }> = {
   en: {
@@ -346,6 +348,8 @@ function getSeoPage(url: URL): SeoPage {
 
   const canonicalUrl = new URL(buildLocalizedPath(route), origin).toString();
   const siteUrl = new URL('/', origin).toString();
+  const imageUrl = new URL(SEO_IMAGE_PATH, origin).toString();
+  const logoUrl = new URL(SEO_LOGO_PATH, origin).toString();
   const ogLocale = LANGUAGES.find(language => language.code === route.lang)?.ogLocale ?? 'en_US';
   const ogAlternateLocales = LANGUAGES
     .filter(language => language.code !== route.lang)
@@ -358,7 +362,7 @@ function getSeoPage(url: URL): SeoPage {
       lang: route.lang,
       title: copy.title,
       description: copy.description,
-      robots: 'index, follow',
+      robots: INDEXABLE_ROBOTS,
       canonicalUrl,
       fallbackHtml: copy.fallbackHtml,
       noscriptHtml: copy.noscriptHtml,
@@ -372,6 +376,7 @@ function getSeoPage(url: URL): SeoPage {
         url: canonicalUrl,
         inLanguage: route.lang,
         description: copy.description,
+        image: imageUrl,
         isPartOf: {
           '@type': 'WebSite',
           name: 'The Black Box',
@@ -402,6 +407,7 @@ function getSeoPage(url: URL): SeoPage {
         url: canonicalUrl,
         inLanguage: route.lang,
         description: copy.description,
+        image: imageUrl,
         isPartOf: {
           '@type': 'WebSite',
           name: 'The Black Box',
@@ -416,7 +422,7 @@ function getSeoPage(url: URL): SeoPage {
     lang: route.lang,
     title: copy.title,
     description: copy.description,
-    robots: 'index, follow',
+    robots: INDEXABLE_ROBOTS,
     canonicalUrl,
     fallbackHtml: copy.fallbackHtml,
     noscriptHtml: copy.noscriptHtml,
@@ -432,6 +438,15 @@ function getSeoPage(url: URL): SeoPage {
       url: canonicalUrl,
       inLanguage: route.lang,
       description: copy.description,
+      image: imageUrl,
+      publisher: {
+        '@type': 'Organization',
+        name: 'The Black Box',
+        logo: {
+          '@type': 'ImageObject',
+          url: logoUrl,
+        },
+      },
       offers: {
         '@type': 'Offer',
         price: '0',
@@ -493,14 +508,18 @@ function applySeoMetadata(response: Response, url: URL): Response {
     .on('title', new TextContentHandler(seo.title))
     .on('meta[name="description"]', new AttributeHandler('content', seo.description))
     .on('meta[name="robots"]', new AttributeHandler('content', seo.robots))
+    .on('meta[name="googlebot"]', new AttributeHandler('content', seo.robots))
     .on('meta[property="og:title"]', new AttributeHandler('content', seo.title))
     .on('meta[property="og:description"]', new AttributeHandler('content', seo.description))
     .on('meta[property="og:url"]', new AttributeHandler('content', seo.canonicalUrl))
     .on('meta[property="og:locale"]', new AttributeHandler('content', seo.ogLocale))
     .on('meta[property="og:image"]', new AttributeHandler('content', imageUrl))
+    .on('meta[property="og:image:secure_url"]', new AttributeHandler('content', imageUrl))
+    .on('meta[property="og:image:type"]', new AttributeHandler('content', 'image/png'))
     .on('meta[name="twitter:title"]', new AttributeHandler('content', seo.title))
     .on('meta[name="twitter:description"]', new AttributeHandler('content', seo.description))
     .on('meta[name="twitter:image"]', new AttributeHandler('content', imageUrl))
+    .on('meta[name="twitter:url"]', new AttributeHandler('content', seo.canonicalUrl))
     .on('link[rel="canonical"]', new AttributeHandler('href', seo.canonicalUrl))
     .on('script[data-seo="structured-data"]', new TextContentHandler(seo.jsonLd))
     .on('main[data-seo-fallback]', new InnerHtmlHandler(seo.fallbackHtml))

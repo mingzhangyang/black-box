@@ -1,30 +1,74 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
-  <!-- Background -->
-  <rect width="1200" height="630" fill="#09090b"/>
-  <!-- Subtle dot grid -->
   <defs>
-    <pattern id="grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
-      <circle cx="1" cy="1" r="1" fill="rgba(255,255,255,0.08)"/>
+    <pattern id="dotGrid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <circle cx="2" cy="2" r="1.5" fill="#ffffff" opacity="0.05" />
     </pattern>
-    <!-- Glow -->
-    <radialGradient id="glow" cx="50%" cy="50%" r="45%">
-      <stop offset="0%" stop-color="#3f3f46" stop-opacity="0.6"/>
-      <stop offset="100%" stop-color="#09090b" stop-opacity="0"/>
+    <radialGradient id="bg-grad" cx="50%" cy="0%" r="100%" fx="50%" fy="0%">
+      <stop offset="0%" stop-color="#18181b" />
+      <stop offset="100%" stop-color="#09090b" />
     </radialGradient>
+    <filter id="glow-purple-og" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1" result="blur" />
+      <feComponentTransfer in="blur" result="glow">
+        <feFuncA type="linear" slope="1.5" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode in="glow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="glow-amber-og" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="1" result="blur" />
+      <feComponentTransfer in="blur" result="glow">
+        <feFuncA type="linear" slope="1.5" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode in="glow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+    <filter id="ambient-glow">
+      <feGaussianBlur stdDeviation="80" result="blur" />
+    </filter>
+    <linearGradient id="text-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="100%" stop-color="#a1a1aa" />
+    </linearGradient>
   </defs>
-  <rect width="1200" height="630" fill="url(#grid)"/>
-  <ellipse cx="600" cy="315" rx="380" ry="280" fill="url(#glow)"/>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="#09090b" />
+  <rect width="1200" height="630" fill="url(#bg-grad)" opacity="0.8" />
+  <rect width="1200" height="630" fill="url(#dotGrid)" />
+  
+  <!-- Ambient Glows -->
+  <circle cx="920" cy="315" r="250" fill="#c084fc" opacity="0.15" filter="url(#ambient-glow)" />
+  <circle cx="920" cy="315" r="150" fill="#fbbf24" opacity="0.1" filter="url(#ambient-glow)" />
+  <circle cx="200" cy="630" r="300" fill="#a1a1aa" opacity="0.05" filter="url(#ambient-glow)" />
 
-  <!-- Box icon centered, scaled up -->
-  <!-- Original 24x24 paths scaled by 8 (192x192), centered at 600,315 → offset by -96,-96 → translate(504,219) -->
-  <g transform="translate(504,219) scale(8)" stroke="#a1a1aa" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
-    <path d="m3.3 7 8.7 5 8.7-5"/>
-    <path d="M12 22V12"/>
+  <!-- Left Content -->
+  <g transform="translate(100, 285)">
+    <text x="0" y="0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="88" font-weight="800" fill="url(#text-grad)" letter-spacing="-0.03em">The Black Box</text>
+    <text x="0" y="85" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32" font-weight="400" fill="#a1a1aa" letter-spacing="-0.01em">Drop your thoughts inside.</text>
+    <text x="0" y="135" font-family="ui-sans-serif, system-ui, sans-serif" font-size="32" font-weight="400" fill="#a1a1aa" letter-spacing="-0.01em">You never know what will come out.</text>
   </g>
 
-  <!-- App name -->
-  <text x="600" y="480" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="52" font-weight="700" fill="#f4f4f5" text-anchor="middle" letter-spacing="-1">The Black Box</text>
-  <!-- Tagline -->
-  <text x="600" y="538" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="26" fill="#71717a" text-anchor="middle">Drop your thoughts inside. You never know what will come out.</text>
+  <!-- Right Logo (Scaled up) -->
+  <g transform="translate(730, 123) scale(16)">
+    <rect width="24" height="24" rx="5" fill="#09090b" stroke="#27272a" stroke-width="0.5" />
+    <g stroke="#a1a1aa" stroke-width="1.75" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/>
+      <path d="m3.3 7 8.7 5 8.7-5"/>
+      <path d="M12 22V12"/>
+    </g>
+    <g transform="matrix(0.866, 0.5, 0, 1, 7.65, 14.5)">
+      <text x="0" y="0" font-family="ui-sans-serif, system-ui, sans-serif" font-size="7" font-weight="bold" fill="#a1a1aa" text-anchor="middle" dominant-baseline="central">A</text>
+    </g>
+    <g transform="matrix(0.866, -0.5, 0, 1, 16.35, 14.5)">
+      <text x="0" y="0" font-family="ui-serif, Georgia, serif" font-size="7" font-weight="bold" font-style="italic" fill="#c084fc" text-anchor="middle" dominant-baseline="central" filter="url(#glow-purple-og)">A</text>
+    </g>
+    <g transform="translate(12, 7) scale(1, 0.577) rotate(45)">
+      <path d="M 0 -3.5 C 0 -1 1 0 3.5 0 C 1 0 0 1 0 3.5 C 0 1 -1 0 -3.5 0 C -1 0 0 -1 0 -3.5 Z" fill="#fbbf24" filter="url(#glow-amber-og)"/>
+    </g>
+  </g>
 </svg>
