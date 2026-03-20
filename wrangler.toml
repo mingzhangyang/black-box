@@ -1,7 +1,7 @@
 name = "black-box"
 main = "worker/index.ts"
 compatibility_date = "2025-01-01"
-worker_dev = false
+workers_dev = false
 
 [[kv_namespaces]]
 binding = "BLACK-BOX-SHARE"
