@@ -44,17 +44,39 @@ export default function App({ initialLang, initialShareId }: Props) {
   // Load shared result from URL on mount
   useEffect(() => {
     if (!initialShareId) return;
+
+    let cancelled = false;
     setBoxState('processing');
-    fetch(`/api/share/${initialShareId}`)
-      .then(res => { if (!res.ok) throw new Error(); return res.json(); })
-      .then((data: { input: string; output: string; personaId: string }) => {
+    setIsError(false);
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/share/${initialShareId}`);
+        if (cancelled) return;
+        if (res.status === 404) {
+          setIsError(true);
+          setOutput(t.shareMissing);
+          setBoxState('revealed');
+          return;
+        }
+        if (!res.ok) throw new Error();
+        const data = await res.json() as { input: string; output: string; personaId: string };
         const persona = PERSONAS.find(p => p.id === data.personaId) ?? PERSONAS[0];
         setInput(data.input);
         setOutput(data.output);
         setCurrentPersona(persona);
         setBoxState('revealed');
-      })
-      .catch(() => setBoxState('idle'));
+      } catch {
+        if (cancelled) return;
+        setIsError(true);
+        setOutput(t.error);
+        setBoxState('revealed');
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [initialShareId]);
 
   // Move focus to "Try another" after reveal animation completes
@@ -86,7 +108,7 @@ export default function App({ initialLang, initialShareId }: Props) {
         fetch('/api/generate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ input, personaId: nextPersona.id }),
+          body: JSON.stringify({ input, personaId: nextPersona.id, lang }),
           signal: controller.signal,
         }),
         new Promise(resolve => setTimeout(resolve, 2000)),
@@ -94,7 +116,7 @@ export default function App({ initialLang, initialShareId }: Props) {
 
       if (!res.ok) {
         setIsError(true);
-        setOutput(t.error);
+        setOutput(res.status === 429 ? t.rateLimited : t.error);
         setBoxState('revealed');
         return;
       }

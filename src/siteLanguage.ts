@@ -19,6 +19,15 @@ export type RouteInfo = {
 
 export const DEFAULT_LANG: Lang = 'en';
 
+export const LANGUAGE_PROMPT_NAMES: Record<Lang, string> = {
+  en: 'English',
+  zh: 'Simplified Chinese (简体中文)',
+  fr: 'French (Français)',
+  es: 'Spanish (Español)',
+  ja: 'Japanese (日本語)',
+  ko: 'Korean (한국어)',
+};
+
 const LANGUAGE_CODES = new Set<string>(LANGUAGES.map(({ code }) => code));
 
 export function isLang(value: string | null | undefined): value is Lang {

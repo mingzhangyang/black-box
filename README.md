@@ -96,7 +96,7 @@ npm run deploy
 ## Project Structure
 
 ```text
-src/              React app, localized UI, route helpers, components
+src/              React app, localized UI, route helpers, components, shared personas
 worker/index.ts   Cloudflare Worker entrypoint and API/SEO logic
 public/           Static assets
 wrangler.toml     Worker config, KV, Workers AI, assets bindings, and runtime vars
@@ -105,8 +105,10 @@ wrangler.toml     Worker config, KV, Workers AI, assets bindings, and runtime va
 ## Runtime Notes
 
 - Maximum input length is `2000` characters
+- Generated replies are capped at `1536` tokens
 - Share links are stored in KV with a 90-day TTL
-- The worker includes a simple in-memory IP rate limiter of `10` requests per minute per worker instance
+- Generate and share are rate-limited to `10` requests per minute per IP via a Workers Rate Limiting binding
+- Generated text follows the selected UI language
 - Share pages are intentionally marked `noindex`
 - Persona prompt instructions are kept server-side; the client only sends a `personaId`
 
