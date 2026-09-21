@@ -1,6 +1,6 @@
 # The Black Box
 
-The Black Box is a playful AI web app that takes any short piece of text and rewrites it through a randomly chosen absurd persona. The frontend is a React + Vite single-page app, and the backend is a Cloudflare Worker that calls Gemini, serves localized routes, and stores shareable results in Cloudflare KV.
+The Black Box is a playful AI web app that takes any short piece of text and rewrites it through a randomly chosen absurd persona. The frontend is a React + Vite single-page app, and the backend is a Cloudflare Worker that calls Workers AI, serves localized routes, and stores shareable results in Cloudflare KV.
 
 ## What It Does
 
@@ -19,7 +19,7 @@ The Black Box is a playful AI web app that takes any short piece of text and rew
 - Motion
 - Cloudflare Workers
 - Cloudflare KV
-- Gemini API
+- Cloudflare Workers AI (`@cf/zai-org/glm-4.7-flash`)
 
 ## Local Development
 
@@ -34,23 +34,13 @@ The Black Box is a playful AI web app that takes any short piece of text and rew
 npm install
 ```
 
-### Configure local secrets
+### Configure Workers AI
 
-Create a local worker secrets file:
+The worker uses a native Workers AI binding. No API key is required.
 
-```bash
-cp .dev.vars.example .dev.vars
-```
-
-Then set at least:
-
-```dotenv
-GEMINI_API_KEY=your_key_here
-```
-
-Optional:
-
-- `GEMINI_MODEL` is already set in [`wrangler.toml`](/mnt/c/Users/mingz/Codes/black-box/wrangler.toml) and defaults to `gemini-2.5-flash`
+- `AI_MODEL` is already set in [`wrangler.toml`](./wrangler.toml) and defaults to `@cf/zai-org/glm-4.7-flash`
+- Workers AI runs remotely even during local development, so `wrangler` must be logged in (`npx wrangler login`)
+- Local inference uses Cloudflare GPU capacity and counts toward Workers AI usage
 
 ### Start the app
 
@@ -81,7 +71,7 @@ Vite proxies `/api/*` requests to the worker on `http://localhost:8787`, so both
 
 ## Deployment
 
-Before the first deploy, make sure the Cloudflare resources and secrets are configured correctly.
+Before the first deploy, make sure the Cloudflare resources are configured correctly.
 
 ### 1. Configure KV for shared results
 
@@ -93,11 +83,9 @@ If you need a new namespace for your account/environment, create one and update 
 npx wrangler kv namespace create BLACK-BOX-SHARE
 ```
 
-### 2. Set the Gemini secret
+### 2. Enable Workers AI
 
-```bash
-wrangler secret put GEMINI_API_KEY
-```
+The `[ai]` binding in [`wrangler.toml`](./wrangler.toml) is enough. Make sure the Cloudflare account has Workers AI enabled.
 
 ### 3. Deploy
 
@@ -111,7 +99,7 @@ npm run deploy
 src/              React app, localized UI, route helpers, components
 worker/index.ts   Cloudflare Worker entrypoint and API/SEO logic
 public/           Static assets
-wrangler.toml     Worker config, KV binding, assets binding, runtime vars
+wrangler.toml     Worker config, KV, Workers AI, assets bindings, and runtime vars
 ```
 
 ## Runtime Notes

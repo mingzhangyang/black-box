@@ -20,7 +20,7 @@ export const PRIVACY_CONTENT: Record<Lang, PrivacyTranslation> = {
   en: {
     backHome: 'Back to Home',
     title: 'Privacy Policy',
-    updated: 'Last updated: March 2025',
+    updated: 'Last updated: September 2026',
     pageTitle: 'Privacy Policy — The Black Box',
     siteName: 'The Black Box',
     languageButton: 'Language',
@@ -32,7 +32,7 @@ export const PRIVACY_CONTENT: Record<Lang, PrivacyTranslation> = {
       },
       {
         heading: 'Information We Process',
-        body: `When you use The Black Box, the text you submit is sent to Google's Gemini AI API to generate a response. We do not store your input or the AI-generated output unless you explicitly use the Share feature.
+        body: `When you use The Black Box, the text you submit is sent to Cloudflare Workers AI to generate a response. We do not store your input or the AI-generated output unless you explicitly use the Share feature.
 
 If you choose to share a result, the input text and the AI-generated response are stored on Cloudflare's infrastructure and are accessible via a unique link for up to 90 days, after which they are automatically deleted.
 
@@ -50,7 +50,7 @@ To prevent abuse, your IP address is used for rate limiting. This data is held i
         heading: 'Third-Party Services',
         body: `We use the following third-party services:
 
-**Google Gemini AI** - Your submitted text is sent to Google's Gemini API for processing. Google's privacy policy applies to this data. We recommend you avoid submitting sensitive personal information.
+**Cloudflare Workers AI** - Your submitted text is processed by Cloudflare Workers AI using the GLM-4.7-Flash model. Cloudflare's privacy policy applies to this data. We recommend you avoid submitting sensitive personal information.
 
 **Cloudflare** - The application is hosted on Cloudflare Workers and Cloudflare KV. Cloudflare may process request metadata (such as IP addresses) according to their own privacy policy.`,
       },
@@ -71,7 +71,7 @@ To prevent abuse, your IP address is used for rate limiting. This data is held i
   zh: {
     backHome: '返回首页',
     title: '隐私政策',
-    updated: '最后更新：2025年3月',
+    updated: '最后更新：2026年9月',
     pageTitle: '隐私政策 — 神秘黑箱',
     siteName: '神秘黑箱',
     languageButton: '语言',
@@ -83,7 +83,7 @@ To prevent abuse, your IP address is used for rate limiting. This data is held i
       },
       {
         heading: '我们处理的信息',
-        body: `当您使用神秘黑箱时，您提交的文字将被发送至 Google Gemini AI API 以生成回应。除非您主动使用"分享"功能，否则我们不会存储您的输入内容或 AI 生成的输出内容。
+        body: `当您使用神秘黑箱时，您提交的文字将被发送至 Cloudflare Workers AI 以生成回应。除非您主动使用"分享"功能，否则我们不会存储您的输入内容或 AI 生成的输出内容。
 
 如果您选择分享结果，输入文字和 AI 生成的回应将存储在 Cloudflare 的基础设施中，并可通过唯一链接访问，最长保留 90 天，之后将自动删除。
 
@@ -101,7 +101,7 @@ To prevent abuse, your IP address is used for rate limiting. This data is held i
         heading: '第三方服务',
         body: `我们使用以下第三方服务：
 
-**Google Gemini AI** - 您提交的文字将发送至 Google 的 Gemini API 进行处理。Google 的隐私政策适用于此数据。我们建议您避免提交敏感个人信息。
+**Cloudflare Workers AI** - 您提交的文字将由 Cloudflare Workers AI 使用 GLM-4.7-Flash 模型进行处理。Cloudflare 的隐私政策适用于此数据。我们建议您避免提交敏感个人信息。
 
 **Cloudflare** - 本应用托管在 Cloudflare Workers 和 Cloudflare KV 上。Cloudflare 可能会根据其自身的隐私政策处理请求元数据（例如 IP 地址）。`,
       },
@@ -122,7 +122,7 @@ To prevent abuse, your IP address is used for rate limiting. This data is held i
   fr: {
     backHome: "Retour à l'accueil",
     title: 'Politique de confidentialité',
-    updated: 'Dernière mise à jour : mars 2025',
+    updated: 'Dernière mise à jour : septembre 2026',
     pageTitle: 'Politique de confidentialité — La Boîte Noire',
     siteName: 'La Boîte Noire',
     languageButton: 'Langue',
@@ -134,7 +134,7 @@ To prevent abuse, your IP address is used for rate limiting. This data is held i
       },
       {
         heading: 'Informations que nous traitons',
-        body: `Lorsque vous utilisez La Boîte Noire, le texte que vous soumettez est envoyé à l'API Gemini AI de Google afin de générer une réponse. Nous ne stockons ni votre saisie ni la réponse générée par l'IA, sauf si vous utilisez explicitement la fonction de partage.
+        body: `Lorsque vous utilisez La Boîte Noire, le texte que vous soumettez est envoyé à Cloudflare Workers AI afin de générer une réponse. Nous ne stockons ni votre saisie ni la réponse générée par l'IA, sauf si vous utilisez explicitement la fonction de partage.
 
 Si vous choisissez de partager un résultat, le texte saisi et la réponse générée par l'IA sont stockés sur l'infrastructure de Cloudflare et accessibles via un lien unique pendant 90 jours maximum, puis supprimés automatiquement.
 
@@ -152,7 +152,7 @@ Pour prévenir les abus, votre adresse IP est utilisée pour la limitation de d�
         heading: 'Services tiers',
         body: `Nous utilisons les services tiers suivants :
 
-**Google Gemini AI** - Le texte que vous soumettez est envoyé à l'API Gemini de Google pour traitement. La politique de confidentialité de Google s'applique à ces données. Nous vous recommandons d'éviter de soumettre des informations personnelles sensibles.
+**Cloudflare Workers AI** - Le texte que vous soumettez est traité par Cloudflare Workers AI avec le modèle GLM-4.7-Flash. La politique de confidentialité de Cloudflare s'applique à ces données. Nous vous recommandons d'éviter de soumettre des informations personnelles sensibles.
 
 **Cloudflare** - L'application est hébergée sur Cloudflare Workers et Cloudflare KV. Cloudflare peut traiter des métadonnées de requête (comme les adresses IP) conformément à sa propre politique de confidentialité.`,
       },
@@ -173,7 +173,7 @@ Pour prévenir les abus, votre adresse IP est utilisée pour la limitation de d�
   es: {
     backHome: 'Volver al inicio',
     title: 'Política de privacidad',
-    updated: 'Última actualización: marzo de 2025',
+    updated: 'Última actualización: septiembre de 2026',
     pageTitle: 'Política de privacidad — La Caja Negra',
     siteName: 'La Caja Negra',
     languageButton: 'Idioma',
@@ -185,7 +185,7 @@ Pour prévenir les abus, votre adresse IP est utilisée pour la limitation de d�
       },
       {
         heading: 'Información que procesamos',
-        body: `Cuando usas La Caja Negra, el texto que envías se manda a la API de Gemini AI de Google para generar una respuesta. No almacenamos tu entrada ni la salida generada por la IA, a menos que uses de forma explícita la función Compartir.
+        body: `Cuando usas La Caja Negra, el texto que envías se manda a Cloudflare Workers AI para generar una respuesta. No almacenamos tu entrada ni la salida generada por la IA, a menos que uses de forma explícita la función Compartir.
 
 Si decides compartir un resultado, el texto de entrada y la respuesta generada por la IA se almacenan en la infraestructura de Cloudflare y son accesibles mediante un enlace único durante un máximo de 90 días, tras lo cual se eliminan automáticamente.
 
@@ -203,7 +203,7 @@ Para evitar abusos, usamos tu dirección IP para limitar la tasa de solicitudes.
         heading: 'Servicios de terceros',
         body: `Usamos los siguientes servicios de terceros:
 
-**Google Gemini AI** - El texto que envías se remite a la API Gemini de Google para su procesamiento. La política de privacidad de Google se aplica a estos datos. Te recomendamos no enviar información personal sensible.
+**Cloudflare Workers AI** - El texto que envías lo procesa Cloudflare Workers AI con el modelo GLM-4.7-Flash. La política de privacidad de Cloudflare se aplica a estos datos. Te recomendamos no enviar información personal sensible.
 
 **Cloudflare** - La aplicación está alojada en Cloudflare Workers y Cloudflare KV. Cloudflare puede procesar metadatos de la solicitud (como direcciones IP) de acuerdo con su propia política de privacidad.`,
       },
@@ -224,7 +224,7 @@ Para evitar abusos, usamos tu dirección IP para limitar la tasa de solicitudes.
   ja: {
     backHome: 'ホームに戻る',
     title: 'プライバシーポリシー',
-    updated: '最終更新: 2025年3月',
+    updated: '最終更新: 2026年9月',
     pageTitle: 'プライバシーポリシー — ブラックボックス',
     siteName: 'ブラックボックス',
     languageButton: '言語',
@@ -236,7 +236,7 @@ Para evitar abusos, usamos tu dirección IP para limitar la tasa de solicitudes.
       },
       {
         heading: '当サービスが処理する情報',
-        body: `ブラックボックスを利用すると、入力した文章は応答を生成するために Google の Gemini AI API に送信されます。共有機能を明示的に使わない限り、入力内容や AI が生成した出力を保存することはありません。
+        body: `ブラックボックスを利用すると、入力した文章は応答を生成するために Cloudflare Workers AI に送信されます。共有機能を明示的に使わない限り、入力内容や AI が生成した出力を保存することはありません。
 
 共有を選択した場合、入力文と AI の生成結果は Cloudflare のインフラに保存され、一意のリンクから最長 90 日間アクセスできます。その後、自動的に削除されます。
 
@@ -254,7 +254,7 @@ Para evitar abusos, usamos tu dirección IP para limitar la tasa de solicitudes.
         heading: '第三者サービス',
         body: `当サービスでは、次の第三者サービスを利用しています。
 
-**Google Gemini AI** - 入力された文章は処理のために Google の Gemini API に送信されます。このデータには Google のプライバシーポリシーが適用されます。機密性の高い個人情報は入力しないことを推奨します。
+**Cloudflare Workers AI** - 入力された文章は、Cloudflare Workers AI 上の GLM-4.7-Flash モデルで処理されます。このデータには Cloudflare のプライバシーポリシーが適用されます。機密性の高い個人情報は入力しないことを推奨します。
 
 **Cloudflare** - 本アプリケーションは Cloudflare Workers と Cloudflare KV 上で稼働しています。Cloudflare は独自のプライバシーポリシーに従って、リクエストメタデータ（IP アドレスなど）を処理する場合があります。`,
       },
@@ -275,7 +275,7 @@ Para evitar abusos, usamos tu dirección IP para limitar la tasa de solicitudes.
   ko: {
     backHome: '홈으로 돌아가기',
     title: '개인정보 처리방침',
-    updated: '최종 업데이트: 2025년 3월',
+    updated: '최종 업데이트: 2026년 9월',
     pageTitle: '개인정보 처리방침 — 블랙 박스',
     siteName: '블랙 박스',
     languageButton: '언어',
@@ -287,7 +287,7 @@ Para evitar abusos, usamos tu dirección IP para limitar la tasa de solicitudes.
       },
       {
         heading: '당사가 처리하는 정보',
-        body: `블랙 박스를 사용할 때 입력한 텍스트는 응답 생성을 위해 Google Gemini AI API로 전송됩니다. 사용자가 명시적으로 공유 기능을 사용하지 않는 한, 입력 내용이나 AI가 생성한 출력은 저장하지 않습니다.
+        body: `블랙 박스를 사용할 때 입력한 텍스트는 응답 생성을 위해 Cloudflare Workers AI로 전송됩니다. 사용자가 명시적으로 공유 기능을 사용하지 않는 한, 입력 내용이나 AI가 생성한 출력은 저장하지 않습니다.
 
 결과를 공유하기로 선택하면 입력 텍스트와 AI 생성 응답은 Cloudflare 인프라에 저장되며, 고유 링크를 통해 최대 90일 동안 접근할 수 있습니다. 그 이후에는 자동으로 삭제됩니다.
 
@@ -305,7 +305,7 @@ Para evitar abusos, usamos tu dirección IP para limitar la tasa de solicitudes.
         heading: '제3자 서비스',
         body: `당사는 다음 제3자 서비스를 사용합니다.
 
-**Google Gemini AI** - 사용자가 제출한 텍스트는 처리를 위해 Google Gemini API로 전송됩니다. 이 데이터에는 Google의 개인정보 처리방침이 적용됩니다. 민감한 개인정보는 입력하지 않는 것을 권장합니다.
+**Cloudflare Workers AI** - 사용자가 제출한 텍스트는 Cloudflare Workers AI의 GLM-4.7-Flash 모델로 처리됩니다. 이 데이터에는 Cloudflare의 개인정보 처리방침이 적용됩니다. 민감한 개인정보는 입력하지 않는 것을 권장합니다.
 
 **Cloudflare** - 이 애플리케이션은 Cloudflare Workers와 Cloudflare KV에서 호스팅됩니다. Cloudflare는 자체 개인정보 처리방침에 따라 요청 메타데이터(IP 주소 등)를 처리할 수 있습니다.`,
       },

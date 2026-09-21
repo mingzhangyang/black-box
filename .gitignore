@@ -10,3 +10,4 @@ coverage/
 metadata.json
 
 .wrangler/
+worker-configuration.d.ts

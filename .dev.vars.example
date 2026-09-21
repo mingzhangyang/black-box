@@ -1,1 +1,2 @@
-GEMINI_API_KEY=your_key_here
+# Workers AI uses the native `AI` binding. No API key is required.
+# Keep this file for any future local worker secrets.

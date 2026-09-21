@@ -4,8 +4,8 @@ import type { Lang, RouteInfo } from '../src/siteLanguage';
 
 interface Env {
   ASSETS: { fetch(r: Request): Promise<Response> };
-  GEMINI_API_KEY: string;
-  GEMINI_MODEL?: string;
+  AI: Ai;
+  AI_MODEL?: string;
   'BLACK-BOX-SHARE': KVNamespace;
 }
 
@@ -32,7 +32,7 @@ function generateId(): string {
   return Array.from(bytes, b => chars[b % chars.length]).join('');
 }
 
-const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
+const DEFAULT_AI_MODEL = '@cf/zai-org/glm-4.7-flash';
 
 const MAX_INPUT_LENGTH = 2000;
 const RATE_LIMIT_REQUESTS = 10;
@@ -85,37 +85,37 @@ const PRIVACY_SEO: Record<Lang, { title: string; description: string; fallbackHt
   en: {
     title: 'Privacy Policy — The Black Box',
     description: 'Read how The Black Box handles submitted text, shared links, rate limiting, and third-party services.',
-    fallbackHtml: '<h1>Privacy Policy</h1><p>Read how The Black Box handles submitted text, shared links, IP-based rate limiting, and third-party services such as Google Gemini and Cloudflare.</p>',
+    fallbackHtml: '<h1>Privacy Policy</h1><p>Read how The Black Box handles submitted text, shared links, IP-based rate limiting, and Cloudflare Workers AI.</p>',
     noscriptHtml: '<h1>Privacy Policy</h1><p>The privacy policy remains readable without JavaScript.</p>',
   },
   zh: {
     title: '隐私政策 — 神秘黑箱',
-    description: '了解神秘黑箱如何处理提交文字、分享链接、基于 IP 的频率限制，以及 Google Gemini 与 Cloudflare 等第三方服务。',
-    fallbackHtml: '<h1>隐私政策</h1><p>了解神秘黑箱如何处理提交文字、分享链接、基于 IP 的频率限制，以及 Google Gemini 与 Cloudflare 等第三方服务。</p>',
+    description: '了解神秘黑箱如何处理提交文字、分享链接、基于 IP 的频率限制，以及 Cloudflare Workers AI。',
+    fallbackHtml: '<h1>隐私政策</h1><p>了解神秘黑箱如何处理提交文字、分享链接、基于 IP 的频率限制，以及 Cloudflare Workers AI。</p>',
     noscriptHtml: '<h1>隐私政策</h1><p>隐私政策在未启用 JavaScript 时仍然可阅读。</p>',
   },
   fr: {
     title: 'Politique de confidentialité — La Boîte Noire',
-    description: 'Découvrez comment La Boîte Noire traite les textes soumis, les liens partagés, la limitation par IP et les services tiers comme Google Gemini et Cloudflare.',
-    fallbackHtml: '<h1>Politique de confidentialité</h1><p>Découvrez comment La Boîte Noire traite les textes soumis, les liens partagés, la limitation par IP et les services tiers comme Google Gemini et Cloudflare.</p>',
+    description: 'Découvrez comment La Boîte Noire traite les textes soumis, les liens partagés, la limitation par IP et Cloudflare Workers AI.',
+    fallbackHtml: '<h1>Politique de confidentialité</h1><p>Découvrez comment La Boîte Noire traite les textes soumis, les liens partagés, la limitation par IP et Cloudflare Workers AI.</p>',
     noscriptHtml: '<h1>Politique de confidentialité</h1><p>La politique de confidentialité reste lisible sans JavaScript.</p>',
   },
   es: {
     title: 'Política de privacidad — La Caja Negra',
-    description: 'Consulta cómo La Caja Negra gestiona el texto enviado, los enlaces compartidos, el control por IP y servicios de terceros como Google Gemini y Cloudflare.',
-    fallbackHtml: '<h1>Política de privacidad</h1><p>Consulta cómo La Caja Negra gestiona el texto enviado, los enlaces compartidos, el control por IP y servicios de terceros como Google Gemini y Cloudflare.</p>',
+    description: 'Consulta cómo La Caja Negra gestiona el texto enviado, los enlaces compartidos, el control por IP y Cloudflare Workers AI.',
+    fallbackHtml: '<h1>Política de privacidad</h1><p>Consulta cómo La Caja Negra gestiona el texto enviado, los enlaces compartidos, el control por IP y Cloudflare Workers AI.</p>',
     noscriptHtml: '<h1>Política de privacidad</h1><p>La política de privacidad sigue siendo legible sin JavaScript.</p>',
   },
   ja: {
     title: 'プライバシーポリシー — ブラックボックス',
-    description: 'ブラックボックスが送信された文章、共有リンク、IP ベースの制限、Google Gemini や Cloudflare などの外部サービスをどう扱うかを説明します。',
-    fallbackHtml: '<h1>プライバシーポリシー</h1><p>ブラックボックスが送信された文章、共有リンク、IP ベースの制限、Google Gemini や Cloudflare などの外部サービスをどう扱うかを説明します。</p>',
+    description: 'ブラックボックスが送信された文章、共有リンク、IP ベースの制限、Cloudflare Workers AI をどう扱うかを説明します。',
+    fallbackHtml: '<h1>プライバシーポリシー</h1><p>ブラックボックスが送信された文章、共有リンク、IP ベースの制限、Cloudflare Workers AI をどう扱うかを説明します。</p>',
     noscriptHtml: '<h1>プライバシーポリシー</h1><p>JavaScript が無効でもプライバシーポリシーは読めます。</p>',
   },
   ko: {
     title: '개인정보 처리방침 — 블랙 박스',
-    description: '블랙 박스가 제출된 텍스트, 공유 링크, IP 기반 제한, Google Gemini 및 Cloudflare 같은 외부 서비스를 어떻게 다루는지 설명합니다.',
-    fallbackHtml: '<h1>개인정보 처리방침</h1><p>블랙 박스가 제출된 텍스트, 공유 링크, IP 기반 제한, Google Gemini 및 Cloudflare 같은 외부 서비스를 어떻게 다루는지 설명합니다.</p>',
+    description: '블랙 박스가 제출된 텍스트, 공유 링크, IP 기반 제한, Cloudflare Workers AI를 어떻게 다루는지 설명합니다.',
+    fallbackHtml: '<h1>개인정보 처리방침</h1><p>블랙 박스가 제출된 텍스트, 공유 링크, IP 기반 제한, Cloudflare Workers AI를 어떻게 다루는지 설명합니다.</p>',
     noscriptHtml: '<h1>개인정보 처리방침</h1><p>JavaScript 없이도 개인정보 처리방침을 읽을 수 있습니다.</p>',
   },
 };
@@ -673,27 +673,54 @@ async function handleGenerate(request: Request, env: Env): Promise<Response> {
     instruction += "\n\nIMPORTANT: You MUST respond in the exact same language that the user used in their input.";
   }
 
-  const geminiModel = env.GEMINI_MODEL ?? DEFAULT_GEMINI_MODEL;
-  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent`;
-  const geminiRes = await fetch(`${geminiUrl}?key=${env.GEMINI_API_KEY}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      system_instruction: { parts: [{ text: instruction }] },
-      contents: [{ parts: [{ text: input }] }],
-      generationConfig: { temperature: 0.9 },
-    }),
-  });
-
-  if (!geminiRes.ok) {
-    const errText = await geminiRes.text();
-    console.error('Gemini API error:', errText);
-    return Response.json({ error: 'Gemini API request failed' }, { status: 502 });
+  const model = env.AI_MODEL ?? DEFAULT_AI_MODEL;
+  let result: unknown;
+  try {
+    result = await runWorkersAiChat(env.AI, model, {
+      messages: [
+        { role: 'system', content: instruction },
+        { role: 'user', content: input },
+      ],
+      temperature: 0.9,
+      chat_template_kwargs: { enable_thinking: false },
+    });
+  } catch (error) {
+    console.error(JSON.stringify({
+      message: 'Workers AI request failed',
+      error: error instanceof Error ? error.message : String(error),
+    }));
+    return Response.json({ error: 'AI request failed' }, { status: 502 });
   }
 
-  const data = await geminiRes.json() as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-  };
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+  const text = extractGeneratedText(result);
+  if (!text) {
+    console.error(JSON.stringify({ message: 'Workers AI returned empty text' }));
+    return Response.json({ error: 'AI request failed' }, { status: 502 });
+  }
   return Response.json({ text });
+}
+
+type WorkersAiChatRequest = {
+  messages: Array<{ role: 'system' | 'user'; content: string }>;
+  temperature: number;
+  chat_template_kwargs: { enable_thinking: boolean };
+};
+
+type ChatCompletionResponse = {
+  choices?: { message?: { content?: string | null } }[];
+  response?: string;
+};
+
+async function runWorkersAiChat(ai: Ai, model: string, inputs: WorkersAiChatRequest): Promise<unknown> {
+  // Bundled AiModels does not yet include @cf/zai-org/glm-4.7-flash.
+  return ai.run(model as keyof AiModels, inputs as AiTextGenerationInput);
+}
+
+function extractGeneratedText(result: unknown): string {
+  if (!result || typeof result !== 'object') return '';
+  const data = result as ChatCompletionResponse;
+  const choiceText = data.choices?.[0]?.message?.content;
+  if (typeof choiceText === 'string' && choiceText.trim()) return choiceText.trim();
+  if (typeof data.response === 'string' && data.response.trim()) return data.response.trim();
+  return '';
 }
